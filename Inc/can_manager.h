@@ -8,7 +8,7 @@
 #include "stdint.h"
 #include "types.h"
 
-#define CAN_ALL_TYPES_MASK 0x7FFFFF00
+#define CAN_ALL_TYPES_MASK 0x7FFFFF00u
 #define CAN_HANDLERS_SIZE 10
 
 typedef struct {

@@ -11,7 +11,7 @@
 
 #define VESC_MAP_SIZE 16
 VESC vesc_map[VESC_MAP_SIZE] = {{0}};
-S16 vesc_count = 0;
+S32 vesc_count = 0;
 
 void vesc_system_init() {
   registerCANMsgHandler(0xFFFFFFFFu, handle_vesc_can_recv);
@@ -106,7 +106,7 @@ void vesc_set_rpm(VESC const* vesc, F32 rpm) {
   rpm *= vesc->pole_pairs;
   U8 buffer[4];
   U32 val = (U32)(rpm);
-  S16 index = 0;
+  S32 index = 0;
   buffer_put_int32(buffer, &index, val);
   vesc_send_message(vesc, VESC_PACKET_SET_RPM, buffer, 4);
 }

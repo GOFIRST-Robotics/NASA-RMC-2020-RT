@@ -12,7 +12,7 @@
  */
 
 // System IDs
-#define ACHOO_SYS_ID 101
+#define ACHOO_SYS_ID 101u
 
 // Controller IDs
 #define ACHOO_MOTOR_L 42
