@@ -21,7 +21,7 @@ uint8_t RxData[8];
 CANMsgHandlerPair msgHandlers[CAN_HANDLERS_SIZE];
 int canHandlersCt = 0;
 
-void do_send_can_message(U32 const id, U8 const * buf, S32 const length) {
+void do_send_can_message(U32 const id, U8 const* buf, S32 const length) {
   TxHeader.IDE = CAN_ID_EXT;
   TxHeader.ExtId = id;
   TxHeader.RTR = CAN_RTR_DATA;

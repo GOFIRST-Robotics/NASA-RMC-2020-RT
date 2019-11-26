@@ -14,4 +14,4 @@ typedef int8_t S8;
 typedef float F32;
 typedef double F64;
 
-#endif //NASA_RMC_RT_TYPES_H
+#endif  // NASA_RMC_RT_TYPES_H

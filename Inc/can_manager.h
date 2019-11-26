@@ -17,7 +17,7 @@ typedef struct {
   S32 length;
 } rmc_can_msg;
 
-void do_send_can_message(U32 id, U8 const * buf, S32 length);
+void do_send_can_message(U32 id, U8 const* buf, S32 length);
 
 typedef struct {
   unsigned int mask;

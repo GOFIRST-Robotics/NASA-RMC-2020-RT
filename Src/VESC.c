@@ -17,7 +17,8 @@ void vesc_system_init() {
   registerCANMsgHandler(0xFFFFFFFFu, handle_vesc_can_recv);
 }
 
-void vesc_send_message(VESC const * vesc, U8 const type, U8 const * buffer, S32 const length) {
+void vesc_send_message(VESC const* vesc, U8 const type, U8 const* buffer,
+                       S32 const length) {
   do_send_can_message(type << 8u | vesc->id, buffer, length);
 }
 
@@ -42,7 +43,7 @@ void handle_vesc_can_recv(rmc_can_msg const msg) {
   if (ptr != NULL) {
     U8 cmd_id = msg.id >> 8u;
     S32 index = 0;
-    U8 const * buf = msg.buf;
+    U8 const* buf = msg.buf;
     switch (cmd_id) {
       case VESC_PACKET_STATUS: {
         if (msg.length < 8) {
@@ -92,7 +93,7 @@ void handle_vesc_can_recv(rmc_can_msg const msg) {
   }
 }
 
-void vesc_set_duty_cycle(VESC const * vesc, F32 duty_cycle) {
+void vesc_set_duty_cycle(VESC const* vesc, F32 duty_cycle) {
   U8 buffer[4];
   U32 val = (U32)(duty_cycle * 100000.0);
   S32 index = 0;
@@ -100,7 +101,7 @@ void vesc_set_duty_cycle(VESC const * vesc, F32 duty_cycle) {
   vesc_send_message(vesc, VESC_PACKET_SET_DUTY, buffer, 4);
 }
 
-void vesc_set_rpm(VESC const * vesc, F32 rpm) {
+void vesc_set_rpm(VESC const* vesc, F32 rpm) {
   // Normalize rpm to erpm
   rpm *= vesc->pole_pairs;
   U8 buffer[4];
@@ -110,7 +111,7 @@ void vesc_set_rpm(VESC const * vesc, F32 rpm) {
   vesc_send_message(vesc, VESC_PACKET_SET_RPM, buffer, 4);
 }
 
-void vesc_set_position(VESC const * vesc, F32 pos) {
+void vesc_set_position(VESC const* vesc, F32 pos) {
   // Multiply degrees to encoder counts
   pos *= (6.0f * vesc->pole_pairs);
   U8 buffer[4];
@@ -119,20 +120,20 @@ void vesc_set_position(VESC const * vesc, F32 pos) {
   vesc_send_message(vesc, VESC_PACKET_SET_POS, buffer, 4);
 }
 
-void vesc_set_current(VESC const * vesc, F32 current) {
+void vesc_set_current(VESC const* vesc, F32 current) {
   U8 buffer[4];
   U32 val = (U32)(current * 1000.0);
   memcpy(buffer, &val, sizeof(U8) * 4);
   vesc_send_message(vesc, VESC_PACKET_SET_CURRENT, buffer, 4);
 }
 
-F32 vesc_get_rpm(VESC const * vesc) { return vesc->erpm / vesc->pole_pairs; }
+F32 vesc_get_rpm(VESC const* vesc) { return vesc->erpm / vesc->pole_pairs; }
 
-F32 vesc_get_position(VESC const * vesc) {
+F32 vesc_get_position(VESC const* vesc) {
   return 360.0f * vesc->tacho_value / (6.0f * vesc->pole_pairs);
 }
 
-S32 buffer_pop_int32(U8 const * buffer, S32* index) {
+S32 buffer_pop_int32(U8 const* buffer, S32* index) {
   S32 buf;
   buf = buffer[(*index)++] << 24;
   buf |= buffer[(*index)++] << 16;
@@ -141,7 +142,7 @@ S32 buffer_pop_int32(U8 const * buffer, S32* index) {
   return buf;
 }
 
-int16_t buffer_pop_int16(U8 const * buffer, S32* index) {
+int16_t buffer_pop_int16(U8 const* buffer, S32* index) {
   int16_t buf;
   buf |= buffer[(*index)++] << 8;
   buf |= buffer[(*index)++];
