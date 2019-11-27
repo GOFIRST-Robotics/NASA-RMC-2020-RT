@@ -14,10 +14,10 @@
 
 extern CAN_HandleTypeDef hcan;
 extern UART_HandleTypeDef huart2;
-uint32_t TxMailbox;
+U32 TxMailbox;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
-uint8_t RxData[8];
+U8 RxData[8];
 CANMsgHandlerPair msgHandlers[CAN_HANDLERS_SIZE];
 int canHandlersCt = 0;
 
@@ -31,7 +31,8 @@ void do_send_can_message(U32 const id, U8 const* buf, S32 const length) {
   int retval = HAL_CAN_AddTxMessage(&hcan, &TxHeader, buf, &TxMailbox);
 }
 
-void registerCANMsgHandler(U32 const mask, void (*callback)(rmc_can_msg msg)) {
+void registerCANMsgHandler(U32 const mask,
+                           void (*const callback)(rmc_can_msg msg)) {
   msgHandlers[canHandlersCt++] =
       (CANMsgHandlerPair){.mask = mask, .callback = callback};
 }
