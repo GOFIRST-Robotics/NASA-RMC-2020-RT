@@ -13,10 +13,6 @@
 
 KneelState targetState = KNEELING;
 KneelState currentState = KNEELING;
-<<<<<<< Updated upstream
-float pos_target = ACHOO_STAND_SETPOINT;
-=======
->>>>>>> Stashed changes
 VESC* leftMotor;
 VESC* rightMotor;
 
@@ -46,18 +42,24 @@ void achooControllerFunc(void const* argument) {
   while (1) {
     vTaskDelayUntil(&lastWakeTime, ACHOO_LOOP_MS * portTICK_RATE_MS);
     // Handle target state transitions
-    if (targetState == KNEELING && (currentState == STANDING || currentState == MOVING_STAND)) {
-        currentState = MOVING_KNEEL;
-    }
-    else if (targetState == STANDING && (currentState == KNEELING || currentState == MOVING_KNEEL)) {
-        currentState = MOVING_STAND;
+    if (targetState == KNEELING &&
+        (currentState == STANDING || currentState == MOVING_STAND)) {
+      currentState = MOVING_KNEEL;
+    } else if (targetState == STANDING &&
+               (currentState == KNEELING || currentState == MOVING_KNEEL)) {
+      currentState = MOVING_STAND;
     }
     // Check if our movement has completed
 
-
-    // Continuously set VESC position PID target
-    vesc_set_position(leftMotor, pos_target / ACHOO_DEG_MM_CONV);
-    vesc_set_position(rightMotor, pos_target / ACHOO_DEG_MM_CONV);
+    // Set VESC movement
+    float current = 0;
+    if (currentState == MOVING_STAND) {
+      current = 10;
+    } else if (currentState == MOVING_KNEEL) {
+      current = -10;
+    }
+    vesc_set_current(leftMotor, current);
+    vesc_set_current(rightMotor, current);
 
     // Send status message
     uint8_t data[1];
@@ -66,6 +68,4 @@ void achooControllerFunc(void const* argument) {
   }
 }
 
-KneelState getACHOOState() {
-    return currentState;
-}
+KneelState getACHOOState() { return currentState; }
