@@ -52,7 +52,7 @@ void achooControllerFunc(void const* argument) {
     // Check if our movement has completed
 
     // Set VESC movement
-    float current = 0;
+    F32 current = 0;
     if (currentState == MOVING_STAND) {
       current = 10;
     } else if (currentState == MOVING_KNEEL) {
