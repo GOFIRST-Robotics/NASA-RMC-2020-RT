@@ -5,8 +5,10 @@
 #include "achoo_controller.h"
 #include <FreeRTOS.h>
 #include <can_manager.h>
+#include <main.h>
 #include <math.h>
 #include <rt_conf.h>
+#include <stm32f3xx_hal_conf.h>
 #include <task.h>
 #include "VESC.h"
 #include "stdlib.h"
@@ -49,13 +51,23 @@ void achooControllerFunc(void const* argument) {
                (currentState == KNEELING || currentState == MOVING_KNEEL)) {
       currentState = MOVING_STAND;
     }
+    bool lowLimit =
+        HAL_GPIO_ReadPin(ACHOO_LimitL_GPIO_Port, ACHOO_LimitL_Pin) == 0;
+    bool highLimit =
+        HAL_GPIO_ReadPin(ACHOO_LimitH_GPIO_Port, ACHOO_LimitH_Pin) == 0;
     // Check if our movement has completed
+    if (lowLimit && currentState == MOVING_KNEEL) {
+      currentState = KNEELING;
+    }
+    if (highLimit && currentState == MOVING_STAND) {
+      currentState = STANDING;
+    }
 
     // Set VESC movement
     F32 current = 0;
-    if (currentState == MOVING_STAND) {
+    if (currentState == MOVING_STAND && !highLimit) {
       current = 10;
-    } else if (currentState == MOVING_KNEEL) {
+    } else if (currentState == MOVING_KNEEL && !lowLimit) {
       current = -10;
     }
     vesc_set_current(leftMotor, current);
