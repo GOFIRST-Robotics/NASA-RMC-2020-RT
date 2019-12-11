@@ -13,9 +13,13 @@
 
 // System IDs
 #define ACHOO_SYS_ID 101u
-
+#define DRIVETRAIN_SYS_ID 100u
 // Controller IDs
 #define ACHOO_MOTOR_L 42u
 #define ACHOO_MOTOR_R 2u
+#define DRIVE_MOTOR_BL 21u
+#define DRIVE_MOTOR_FL 22u
+#define DRIVE_MOTOR_BR 23u
+#define DRIVE_MOTOR_FR 24u
 
 #endif  // NASA_RMC_RT_RT_CONF_H
