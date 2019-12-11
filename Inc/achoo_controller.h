@@ -13,7 +13,7 @@ typedef enum { STANDING = 0, MOVING_STAND, MOVING_KNEEL, KNEELING } KneelState;
 #define ACHOO_MSG_SET_KNEEL 40u
 #define ACHOO_MSG_STATUS 41u
 
-#define ACHOO_LOOP_MS 20
+#define ACHOO_LOOP_MS 20u
 
 void achooCANCallback(rmc_can_msg msg);
 

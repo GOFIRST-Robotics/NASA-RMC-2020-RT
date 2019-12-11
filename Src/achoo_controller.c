@@ -3,15 +3,14 @@
 //
 
 #include "achoo_controller.h"
-#include <FreeRTOS.h>
 #include <can_manager.h>
 #include <main.h>
-#include <math.h>
 #include <rt_conf.h>
+#include "VESC.h"
+
+#include <FreeRTOS.h>
 #include <stm32f3xx_hal_conf.h>
 #include <task.h>
-#include "VESC.h"
-#include "stdlib.h"
 
 KneelState targetState = KNEELING;
 KneelState currentState = KNEELING;
@@ -64,11 +63,11 @@ void achooControllerFunc(void const* argument) {
     }
 
     // Set VESC movement
-    F32 current = 0;
+    F32 current = 0.0f;
     if (currentState == MOVING_STAND && !highLimit) {
-      current = 10;
+      current = 10.0f;
     } else if (currentState == MOVING_KNEEL && !lowLimit) {
-      current = -10;
+      current = -10.0f;
     }
     vesc_set_current(leftMotor, current);
     vesc_set_current(rightMotor, current);
