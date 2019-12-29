@@ -15,6 +15,7 @@
 extern CAN_HandleTypeDef hcan;
 extern UART_HandleTypeDef huart2;
 extern QueueHandle_t xCanRxQueue;
+extern osMutexId canTxMutexHandle;
 U32 TxMailbox;
 CAN_TxHeaderTypeDef TxHeader;
 CAN_RxHeaderTypeDef RxHeader;
@@ -28,8 +29,9 @@ void do_send_can_message(U32 const id, U8 const* buf, S32 const length) {
   TxHeader.RTR = CAN_RTR_DATA;
   TxHeader.DLC = length;
   TxHeader.TransmitGlobalTime = DISABLE;
-  // todo mutex?
+  xSemaphoreTake(canTxMutexHandle, portMAX_DELAY);
   int retval = HAL_CAN_AddTxMessage(&hcan, &TxHeader, buf, &TxMailbox);
+  xSemaphoreGive(canTxMutexHandle);
 }
 
 void registerCANMsgHandler(U32 const mask,

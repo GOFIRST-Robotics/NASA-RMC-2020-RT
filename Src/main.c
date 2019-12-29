@@ -57,6 +57,8 @@ osStaticThreadDef_t achooControllerControlBlock;
 osThreadId canRxDispatchHandle;
 uint32_t canRxDispatchBuffer[ 128 ];
 osStaticThreadDef_t canRxDispatchControlBlock;
+osMutexId canTxMutexHandle;
+osStaticMutexDef_t canTxMutexControlBlock;
 /* USER CODE BEGIN PV */
 QueueHandle_t xCanRxQueue;
 /* USER CODE END PV */
@@ -112,6 +114,11 @@ int main(void)
   /* USER CODE BEGIN 2 */
   vesc_system_init();
   /* USER CODE END 2 */
+
+  /* Create the mutex(es) */
+  /* definition and creation of canTxMutex */
+  osMutexStaticDef(canTxMutex, &canTxMutexControlBlock);
+  canTxMutexHandle = osMutexCreate(osMutex(canTxMutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
