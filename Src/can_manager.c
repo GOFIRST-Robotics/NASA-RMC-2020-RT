@@ -54,18 +54,18 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef* hcan_) {
   // todo worry about failure to post and/or higher priority task woken?
 }
 
-void canRxDispatchTask(void const * argument) {
-    rmc_can_msg msg;
-    while (1) {
-        // Because we use the suspend feature (portMAX_DELAY), this should always return true
-        // This should suspend until an item is available
-        if (xQueueReceive(xCanRxQueue, &msg, portMAX_DELAY) == pdTRUE) {
-            for (S32 i = 0; i < canHandlersCt; ++i) {
-                CANMsgHandlerPair handlerPair = msgHandlers[i];
-                if (msg.id & handlerPair.mask) {
-                    handlerPair.callback(msg);
-                }
-            }
+void canRxDispatchTask(void const* argument) {
+  rmc_can_msg msg;
+  while (1) {
+    // Because we use the suspend feature (portMAX_DELAY), this should always
+    // return true This should suspend until an item is available
+    if (xQueueReceive(xCanRxQueue, &msg, portMAX_DELAY) == pdTRUE) {
+      for (S32 i = 0; i < canHandlersCt; ++i) {
+        CANMsgHandlerPair handlerPair = msgHandlers[i];
+        if (msg.id & handlerPair.mask) {
+          handlerPair.callback(msg);
         }
+      }
     }
+  }
 }
