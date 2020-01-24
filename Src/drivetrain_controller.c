@@ -20,21 +20,35 @@ void drivetrain_move(rmc_can_msg msg) {
     // Because of the mask we only get messages that have our ID
     int32_t cmd_speed = 0; //in mm/s
     int32_t cmd_angV = 0;
-    memcpy(&cmd_speed, &(msg.buf[4]), 4);
-    memcpy(&cmd_angV, (msg.buf), 4);
 
-    double new_speed_right = (cmd_angV * WIDTH) / 2 + cmd_speed;
-    double new_speed_left = cmd_speed * 2 - new_speed_right;
+    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
+    {
+        return;
+    }
+    switch(msg.id >> 8)
+    {
+        case DRIVE_MSG_TWIST:
+            memcpy(&cmd_speed, &(msg.buf[4]), 4);
+            memcpy(&cmd_angV, (msg.buf), 4);
+
+            new_speed_right = (cmd_angV * WIDTH) / 2 + cmd_speed;
+            new_speed_left = cmd_speed * 2 - new_speed_right;
+        break;
+
+        default:
+            //weewoo something went wrong
+        break;
+    }
 }
 
 void drivetrain_loop(void)
 {
     //SETUP
     registerCANMsgHandler(ACHOO_SYS_ID, &drivetrain_move);
-    blm = create_vesc(DRIVE_MOTOR_BL, DRIVE_MOTOR_POLE_PAIRS);
-    brm = create_vesc(DRIVE_MOTOR_BR, DRIVE_MOTOR_POLE_PAIRS);
-    frm = create_vesc(DRIVE_MOTOR_FR, DRIVE_MOTOR_POLE_PAIRS);
-    flm = create_vesc(DRIVE_MOTOR_FL, DRIVE_MOTOR_POLE_PAIRS);
+    VESC* blm = create_vesc(DRIVE_MOTOR_BL, DRIVE_MOTOR_POLE_PAIRS);
+    VESC* brm = create_vesc(DRIVE_MOTOR_BR, DRIVE_MOTOR_POLE_PAIRS);
+    VESC* frm = create_vesc(DRIVE_MOTOR_FR, DRIVE_MOTOR_POLE_PAIRS);
+    VESC* flm = create_vesc(DRIVE_MOTOR_FL, DRIVE_MOTOR_POLE_PAIRS);
 
 
     TickType_t lastWakeTime;
@@ -45,14 +59,11 @@ void drivetrain_loop(void)
         vTaskDelayUntil(&lastWakeTime, DRIVE_LOOP_MS * portTICK_RATE_MS);// Not sure what this does yet,
         // min 1hz refresh rate
 
-        vesc_set_rpm(blm,new_speed_left);
-        vesc_set_rpm(flm,new_speed_left);
+        vesc_set_rpm(blm, new_speed_left);
+        vesc_set_rpm(flm, new_speed_left);
         vesc_set_rpm(brm, new_speed_right);
         vesc_set_rpm(frm, new_speed_right);
 
         //now publish some optometry data
-        //idk what to send.
     }
-
-//give vescs rpm command
 }

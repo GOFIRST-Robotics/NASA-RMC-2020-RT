@@ -12,7 +12,7 @@
  */
 
 // System IDs
-#define ACHOO_SYS_ID 101u
+#define ACHOO_SYS_ID 101u //TODO: this could be in canmanager.h
 #define DRIVETRAIN_SYS_ID 100u
 // Controller IDs
 #define ACHOO_MOTOR_L 42u
