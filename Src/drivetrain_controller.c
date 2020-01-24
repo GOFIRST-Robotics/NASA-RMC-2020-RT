@@ -65,6 +65,9 @@ void drivetrain_loop(void) {
     vesc_set_rpm(brm, new_speed_right);
     vesc_set_rpm(frm, new_speed_right);
 
-    // now publish some optometry data
-  }
+        //now publish some optometry data
+        //idk what to send.
+    }
+
+//give vescs rpm command
 }
