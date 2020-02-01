@@ -437,6 +437,7 @@ static void MX_GPIO_Init(void) {
    */
   GPIO_InitStruct.Pin =
       ACHOO_LimitLH_Pin | ACHOO_LimitRL_Pin | ACHOO_LimitRH_Pin;
+
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
