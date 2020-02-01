@@ -15,14 +15,14 @@ Below is a table of controller subsystem IDs:
 
 | Subsystem  | ID   |
 |------------|------|
-| Drivetrain |  100 |
-| ACHOO      |  101 |
-| Elevator   | 102  |
+| Drivetrain | 100  |
+| ACHOO      | 101  |
+| GESUNDHEIT | 102  |
 | Digger     | 103  |
 
 These IDs start at 100 to avoid interaction with VESCs.
 See the subsystem tables below for message IDs.
-Message IDs are encouraged to begin above 40 to avoid interaction with VESC command IDs, which go up to 27.
+Message IDs are required to begin above 40 to avoid interaction with VESC command IDs, which go up to 27.
 
 Drivetrain
 ---
@@ -36,4 +36,12 @@ ACHOO
 |------------|------|---------------------|--------|------|
 | Set kneel  |  40  | Listens             |   1    | 0: Stand<br>1: Kneel |
 | Kneel state|  41  | Broadcasts (10 Hz)  |   1    | 0: Standing<br>1: Moving up<br>2: Moving Down<br>3: Kneeling |
+
+GESUNDHEIT
+---
+| Command    | ID   | Broadcasts/Listens  | Length | Data |
+|------------|------|---------------------|--------|------|
+| Set extension  |  50  | Listens             |   1    | 0: Stow<br>1: Extend |
+| Conveyor speed |  51  | Listens  |   4    | Speed (int32) rpm |
+| Extension state | 52 | Broadcasts (10 Hz) | 1 | 0: Stowed<br>1: Moving to stow<br>2: Moving to extend<br>3: Extended |
 
