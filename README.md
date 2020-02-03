@@ -39,9 +39,10 @@ ACHOO
 
 GESUNDHEIT
 ---
-| Command    | ID   | Broadcasts/Listens  | Length | Data |
-|------------|------|---------------------|--------|------|
-| Set extension  |  50  | Listens             |   1    | 0: Stow<br>1: Extend |
-| Conveyor speed |  51  | Listens  |   4    | Speed (int32) rpm |
-| Extension state | 52 | Broadcasts (10 Hz) | 1 | 0: Stowed<br>1: Moving to stow<br>2: Moving to extend<br>3: Extended |
+| Command    | ID   | Broadcasts/Listens    | Length | Data |
+|------------|------|-----------------------|--------|------|
+| Set extension  |  50  | Listens           |   1    | 0: Stow<br>1: Extend |
+| Conveyor speed |  51  | Listens           |   4    | Speed (int32) rpm |
+| Set door       |  52  | Listens           |   1    | 0: Close<br>1: Open |
+| Extension state | 53 | Broadcasts (10 Hz) |   6    | Byte 0: <br>&nbsp;0: Stowed<br>&nbsp;1: Moving to stow<br>&nbsp;2: Moving to extend<br>&nbsp;3: Extended<br>Byte 1:<br>&nbsp;0: Door closed<br>&nbsp;1: Door open<br>Byte 2-5: Speed (int32) rpm |
 

@@ -16,11 +16,13 @@
 
 static ExtendState targetState = STOWED;
 static ExtendState currentState = STOWED;
+static bool doorOpen = false;
 static F32 targetRPM = 0.0f;
-VESC* gesundheitMotor;
-Relay extension;
-Relay flipl;
-Relay flipr;
+static VESC* gesundheitMotor;
+static Relay extension;
+static Relay flipl;
+static Relay flipr;
+static Relay door;
 
 void gesundheitCANCallback(rmc_can_msg msg) {
   // Because of the mask we only get messages that have our ID
@@ -29,15 +31,18 @@ void gesundheitCANCallback(rmc_can_msg msg) {
     U8 param = msg.buf[0];
     switch (param) {
       case 1:
-        targetState = STOWED;
+        targetState = EXTENDED;
         break;
       default:
       case 0:
-        targetState = EXTENDED;
+        targetState = STOWED;
     }
   } else if (msg_type == GESUNDHEIT_MSG_SET_SPEED && msg.length >= 4) {
     S32 idx = 0;
     targetRPM = (F32)buffer_pop_int32(msg.buf, &idx);
+  } else if (msg_type == GESUNDHEIT_MSG_SET_DOOR && msg.length >= 1) {
+    U8 param = msg.buf[0];
+    doorOpen = param > 0;
   }
 }
 
@@ -52,6 +57,8 @@ void gesundheitControllerFunc(void const* argument) {
                        R_GESUNDL_RV_GPIO_Port, R_GESUNDL_RV_Pin);
   flipr = create_relay(R_GESUNDR_FW_GPIO_Port, R_GESUNDR_FW_Pin,
                        R_GESUNDR_RV_GPIO_Port, R_GESUNDR_RV_Pin);
+  door = create_relay(R_DOOR_FW_GPIO_Port, R_DOOR_FW_Pin, R_DOOR_RV_GPIO_Port,
+                      R_DOOR_RV_Pin);
 
   TickType_t lastWakeTime;
   while (1) {
@@ -102,9 +109,20 @@ void gesundheitControllerFunc(void const* argument) {
     // Set RPM
     vesc_set_rpm(gesundheitMotor, targetRPM);
 
+    // Set door (linear actuator)
+    if (doorOpen) {
+      set_relay(&door, RELAY_FORWARD);
+    } else {
+      set_relay(&door, RELAY_REVERSE);
+    }
+
     // Send status message
-    U8 data[1];
+    U8 data[6];
     data[0] = currentState;
+    data[1] = doorOpen;
+    S32 rpm = (S32)vesc_get_rpm(gesundheitMotor);
+    S32 idx = 2;
+    buffer_put_int32(data, &idx, rpm);
     do_send_can_message((GESUNDHEIT_MSG_STATUS << 8u) | GESUNDHEIT_SYS_ID, data,
                         1);
   }
