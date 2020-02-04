@@ -44,16 +44,28 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 CAN_HandleTypeDef hcan;
 
 UART_HandleTypeDef huart2;
 
 osThreadId defaultTaskHandle;
+uint32_t defaultTaskBuffer[128];
+osStaticThreadDef_t defaultTaskControlBlock;
 osThreadId achooControllerHandle;
 uint32_t achooControllerBuffer[128];
 osStaticThreadDef_t achooControllerControlBlock;
+osThreadId canRxDispatchHandle;
+uint32_t canRxDispatchBuffer[128];
+osStaticThreadDef_t canRxDispatchControlBlock;
+osThreadId gesundheitTaskHandle;
+uint32_t gesundheitTaskBuffer[128];
+osStaticThreadDef_t gesundheitTaskControlBlock;
+osMutexId canTxMutexHandle;
+osStaticMutexDef_t canTxMutexControlBlock;
 /* USER CODE BEGIN PV */
-QueueHandle_t xCanTxQueue;
+QueueHandle_t xCanRxQueue;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -61,8 +73,11 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CAN_Init(void);
+static void MX_ADC1_Init(void);
 void StartDefaultTask(void const *argument);
 extern void achooControllerFunc(void const *argument);
+extern void canRxDispatchTask(void const *argument);
+extern void gesundheitControllerFunc(void const *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -102,9 +117,15 @@ int main(void) {
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_CAN_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   vesc_system_init();
   /* USER CODE END 2 */
+
+  /* Create the mutex(es) */
+  /* definition and creation of canTxMutex */
+  osMutexStaticDef(canTxMutex, &canTxMutexControlBlock);
+  canTxMutexHandle = osMutexCreate(osMutex(canTxMutex));
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -119,18 +140,29 @@ int main(void) {
   /* USER CODE END RTOS_TIMERS */
 
   /* USER CODE BEGIN RTOS_QUEUES */
-  xCanTxQueue = xQueueCreate(8, sizeof(rmc_can_msg));
+  xCanRxQueue = xQueueCreate(8, sizeof(rmc_can_msg));
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
   /* definition and creation of defaultTask */
-  osThreadDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128);
+  osThreadStaticDef(defaultTask, StartDefaultTask, osPriorityNormal, 0, 128,
+                    defaultTaskBuffer, &defaultTaskControlBlock);
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of achooController */
   osThreadStaticDef(achooController, achooControllerFunc, osPriorityNormal, 0,
                     128, achooControllerBuffer, &achooControllerControlBlock);
   achooControllerHandle = osThreadCreate(osThread(achooController), NULL);
+
+  /* definition and creation of canRxDispatch */
+  osThreadStaticDef(canRxDispatch, canRxDispatchTask, osPriorityAboveNormal, 0,
+                    128, canRxDispatchBuffer, &canRxDispatchControlBlock);
+  canRxDispatchHandle = osThreadCreate(osThread(canRxDispatch), NULL);
+
+  /* definition and creation of gesundheitTask */
+  osThreadStaticDef(gesundheitTask, gesundheitControllerFunc, osPriorityNormal,
+                    0, 128, gesundheitTaskBuffer, &gesundheitTaskControlBlock);
+  gesundheitTaskHandle = osThreadCreate(osThread(gesundheitTask), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -184,11 +216,70 @@ void SystemClock_Config(void) {
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2;
+  PeriphClkInit.PeriphClockSelection =
+      RCC_PERIPHCLK_USART2 | RCC_PERIPHCLK_ADC12;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
+  PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
     Error_Handler();
   }
+}
+
+/**
+ * @brief ADC1 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_ADC1_Init(void) {
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_MultiModeTypeDef multimode = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Common config
+   */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK) {
+    Error_Handler();
+  }
+  /** Configure the ADC multi-mode
+   */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK) {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+   */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
 }
 
 /**
@@ -294,7 +385,18 @@ static void MX_GPIO_Init(void) {
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, LD2_Pin | R_GESUNDR_RV_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(
+      GPIOB,
+      R_DOOR_RV_Pin | R_DOOR_FW_Pin | R_GESUNDEXT_RV_Pin | R_GESUNDEXT_FW_Pin,
+      GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC,
+                    R_GESUNDR_FW_Pin | R_GESUNDL_RV_Pin | R_GESUNDL_FW_Pin,
+                    GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -302,18 +404,56 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pins : LD2_Pin R_GESUNDR_RV_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin | R_GESUNDR_RV_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : ACHOO_LimitL_Pin ACHOO_LimitH_Pin */
-  GPIO_InitStruct.Pin = ACHOO_LimitL_Pin | ACHOO_LimitH_Pin;
+  /*Configure GPIO pins : GESUNDHEIT_HallL_Pin BLESSYOU_LimitRL_Pin
+     BLESSYOU_LimitRH_Pin DIGGER_Clock_Pin ACHOO_LimitLL_Pin */
+  GPIO_InitStruct.Pin = GESUNDHEIT_HallL_Pin | BLESSYOU_LimitRL_Pin |
+                        BLESSYOU_LimitRH_Pin | DIGGER_Clock_Pin |
+                        ACHOO_LimitLL_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GESUNDHEIT_HallR_Pin GESUNDHEIT_LimitLI_Pin
+     GESUNDHEIT_LimitLO_Pin GESUNDHEIT_LimitRI_Pin GESUNDHEIT_LimitRO_Pin
+     BLESSYOU_LimitLL_Pin BLESSYOU_LimitLH_Pin */
+  GPIO_InitStruct.Pin = GESUNDHEIT_HallR_Pin | GESUNDHEIT_LimitLI_Pin |
+                        GESUNDHEIT_LimitLO_Pin | GESUNDHEIT_LimitRI_Pin |
+                        GESUNDHEIT_LimitRO_Pin | BLESSYOU_LimitLL_Pin |
+                        BLESSYOU_LimitLH_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : R_DOOR_RV_Pin R_DOOR_FW_Pin R_GESUNDEXT_RV_Pin
+   * R_GESUNDEXT_FW_Pin */
+  GPIO_InitStruct.Pin =
+      R_DOOR_RV_Pin | R_DOOR_FW_Pin | R_GESUNDEXT_RV_Pin | R_GESUNDEXT_FW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ACHOO_LimitLH_Pin ACHOO_LimitRL_Pin ACHOO_LimitRH_Pin
+   */
+  GPIO_InitStruct.Pin =
+      ACHOO_LimitLH_Pin | ACHOO_LimitRL_Pin | ACHOO_LimitRH_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : R_GESUNDR_FW_Pin R_GESUNDL_RV_Pin R_GESUNDL_FW_Pin */
+  GPIO_InitStruct.Pin = R_GESUNDR_FW_Pin | R_GESUNDL_RV_Pin | R_GESUNDL_FW_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
