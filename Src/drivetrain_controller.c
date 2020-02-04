@@ -21,10 +21,12 @@ void drivetrain_move(rmc_can_msg msg) {
     int32_t cmd_speed = 0; //in mm/s
     int32_t cmd_angV = 0;
 
-    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
-    {
-        return;
-    }
+//    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
+//    {
+//        return;
+//    }
+// This portion is already done by the CAN dispatcher. It is here purely for Hunter's understanding.
+
     switch(msg.id >> 8)
     {
         case DRIVE_MSG_TWIST:
@@ -44,7 +46,7 @@ void drivetrain_move(rmc_can_msg msg) {
 void drivetrain_loop(void)
 {
     //SETUP
-    registerCANMsgHandler(ACHOO_SYS_ID, &drivetrain_move);
+    registerCANMsgHandler(DRIVETRAIN_SYS_ID, &drivetrain_move);
     VESC* blm = create_vesc(DRIVE_MOTOR_BL, DRIVE_MOTOR_POLE_PAIRS);
     VESC* brm = create_vesc(DRIVE_MOTOR_BR, DRIVE_MOTOR_POLE_PAIRS);
     VESC* frm = create_vesc(DRIVE_MOTOR_FR, DRIVE_MOTOR_POLE_PAIRS);

@@ -11,13 +11,13 @@
 
 //ALL VALUES ARE IN MILLIMETERS
 #define DRIVETRAIN_SYS_ID 100u
-#define RADIUS 1.00
-#define WIDTH 2.00
+#define RADIUS 1.00f
+#define WIDTH 2.00f
 typedef enum {
     DRIVE_MSG_TWIST = 40
 }DRIVE_MSG_T;
 
-#define DRIVE_LOOP_MS 100 //milliseconds
-#define DRIVE_MOTOR_POLE_PAIRS 14
+#define DRIVE_LOOP_MS 100u //milliseconds, unsigned
+#define DRIVE_MOTOR_POLE_PAIRS 14u
 
 #endif //NASA_RMC_RT_DRIVETRAIN_CONTROLLER_H
