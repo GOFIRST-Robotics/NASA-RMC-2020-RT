@@ -21,12 +21,11 @@ void drivetrain_move(rmc_can_msg msg) {
   int32_t cmd_speed = 0;  // in mm/s
   int32_t cmd_angV = 0;
 
-  //    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
-  //    {
-  //        return;
-  //    }
-  // This portion is already done by the CAN dispatcher. It is here purely for
-  // Hunter's understanding.
+//    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
+//    {
+//        return;
+//    }
+// This portion is already done by the CAN dispatcher. It is here purely for Hunter's understanding.
 
   switch (msg.id >> 8) {
     case DRIVE_MSG_TWIST:
