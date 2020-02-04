@@ -11,10 +11,9 @@
 // for an explanation on how the mathematics for the twist were calculated
 
 // ALL VALUES ARE IN MILLIMETERS
-#define DRIVETRAIN_SYS_ID 100u
 #define RADIUS 1.00f
 #define WIDTH 2.00f
-typedef enum { DRIVE_MSG_TWIST = 40 } DRIVE_MSG_T;
+typedef enum { DRIVE_MSG_TWIST = 35 } DRIVE_MSG_T;
 
 #define DRIVE_LOOP_MS 100u  // milliseconds, unsigned
 #define DRIVE_MOTOR_POLE_PAIRS 14u
