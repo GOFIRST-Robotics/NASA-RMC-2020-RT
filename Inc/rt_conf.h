@@ -14,13 +14,13 @@
 // System IDs
 #define ACHOO_SYS_ID 101u
 #define GESUNDHEIT_SYS_ID 102u
-#define TISSUE_SYS_ID 103u
+#define SNEEZE_SYS_ID 103u
 
 // Controller IDs
 #define ACHOO_MOTOR_L 42u
 #define ACHOO_MOTOR_R 2u
 #define GESUNDHEIT_MOTOR_ID 3u
-#define TISSUE_MOTOR_DIG 4u
-#define TISSUE_MOTOR_TRANS 5u
+#define SNEEZE_MOTOR_DIG 4u
+#define SNEEZE_MOTOR_TRANS 5u
 
 #endif  // NASA_RMC_RT_RT_CONF_H

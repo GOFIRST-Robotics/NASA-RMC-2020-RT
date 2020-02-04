@@ -62,9 +62,9 @@ osStaticThreadDef_t canRxDispatchControlBlock;
 osThreadId gesundheitTaskHandle;
 uint32_t gesundheitTaskBuffer[128];
 osStaticThreadDef_t gesundheitTaskControlBlock;
-osThreadId tissueControlHandle;
-uint32_t tissueControlBuffer[128];
-osStaticThreadDef_t tissueControlControlBlock;
+osThreadId sneezeControlHandle;
+uint32_t sneezeControlBuffer[128];
+osStaticThreadDef_t sneezeControlControlBlock;
 osMutexId canTxMutexHandle;
 osStaticMutexDef_t canTxMutexControlBlock;
 /* USER CODE BEGIN PV */
@@ -81,7 +81,7 @@ void StartDefaultTask(void const *argument);
 extern void achooControllerFunc(void const *argument);
 extern void canRxDispatchTask(void const *argument);
 extern void gesundheitControllerFunc(void const *argument);
-extern void tissueControllerFunc(void const *argument);
+extern void sneezeControllerFunc(void const *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -167,10 +167,11 @@ int main(void) {
   osThreadStaticDef(gesundheitTask, gesundheitControllerFunc, osPriorityNormal,
                     0, 128, gesundheitTaskBuffer, &gesundheitTaskControlBlock);
   gesundheitTaskHandle = osThreadCreate(osThread(gesundheitTask), NULL);
-  /* definition and creation of tissueControl */
-  osThreadStaticDef(tissueControl, tissueControllerFunc, osPriorityNormal, 0,
-                    128, tissueControlBuffer, &tissueControlControlBlock);
-  tissueControlHandle = osThreadCreate(osThread(tissueControl), NULL);
+
+  /* definition and creation of sneezeControl */
+  osThreadStaticDef(sneezeControl, sneezeControllerFunc, osPriorityNormal, 0,
+                    128, sneezeControlBuffer, &sneezeControlControlBlock);
+  sneezeControlHandle = osThreadCreate(osThread(sneezeControl), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -420,9 +421,9 @@ static void MX_GPIO_Init(void) {
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : GESUNDHEIT_HallL_Pin BLESSYOU_LimitRL_Pin
-     BLESSYOU_LimitRH_Pin TISSUE_Home_Pin ACHOO_LimitLL_Pin */
+     BLESSYOU_LimitRH_Pin SNEEZE_Home_Pin ACHOO_LimitLL_Pin */
   GPIO_InitStruct.Pin = GESUNDHEIT_HallL_Pin | BLESSYOU_LimitRL_Pin |
-                        BLESSYOU_LimitRH_Pin | TISSUE_Home_Pin |
+                        BLESSYOU_LimitRH_Pin | SNEEZE_Home_Pin |
                         ACHOO_LimitLL_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;

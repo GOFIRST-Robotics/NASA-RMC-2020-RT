@@ -18,7 +18,7 @@ Below is a table of controller subsystem IDs:
 | Drivetrain | 100  |
 | ACHOO      | 101  |
 | GESUNDHEIT | 102  |
-| TISSUE     | 103  |
+| SNEEZE     | 103  |
 | BLESSYOU   | 104  |
 
 These IDs start at 100 to avoid interaction with VESCs.
@@ -47,7 +47,7 @@ GESUNDHEIT
 | Set door       |  52  | Listens           |   1    | 0: Close<br>1: Open |
 | Extension state | 53 | Broadcasts (10 Hz) |   6    | Byte 0: <br>&nbsp;0: Stowed<br>&nbsp;1: Moving to stow<br>&nbsp;2: Moving to extend<br>&nbsp;3: Extended<br>Byte 1:<br>&nbsp;0: Door closed<br>&nbsp;1: Door open<br>Byte 2-5: Speed (int32) rpm |
 
-TISSUE
+SNEEZE
 ---
 | Command    | ID   | Broadcasts/Listens  | Length | Data |
 |------------|------|---------------------|--------|------|
