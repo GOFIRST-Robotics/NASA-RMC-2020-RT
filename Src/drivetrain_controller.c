@@ -17,13 +17,13 @@
 
 // I am telling the motor controllers to implement a twist message until I get
 // another twist message
-double new_speed_left = 0;
-double new_speed_right = 0;
+F32 new_speed_left = 0;
+F32 new_speed_right = 0;
 
 void drivetrain_move(rmc_can_msg msg) {
   // Because of the mask we only get messages that have our ID
-  int32_t cmd_speed = 0;  // in mm/s
-  int32_t cmd_angV = 0;
+  S32 cmd_speed = 0;  // in mm/s
+  S32 cmd_angV = 0;
 
   //    if(msg.id & 0xFF != DRIVETRAIN_SYS_ID)
   //    {
