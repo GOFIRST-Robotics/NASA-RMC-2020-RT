@@ -30,6 +30,8 @@ Drivetrain
 | Command    | ID   | Broadcasts/Listens  | Length | Data |
 |------------|------|---------------------|--------|------|
 | Twist      |  35  | Listens             |   8    | Bits 7-4: Linear velocity (int32) mm/s<br>Bits 3-0: Angular Velocity (int32) mrad/s |
+| Odometry Pose      |  36  | Broadcasts (10 Hz) |   6    | Bits 5-4: X position (int16) mm<br>Bits 3-2: Y position (int16) mm<br>Bits 1-0: Angle (int16) mrad |
+| Odometry Twist      |  37  | Broadcasts (10 Hz) |   4    | Bits 3-2: Velocity (int16) mm/s<br>Bits 1-0: Angular Velocity (int16) mrad/s |
 
 ACHOO
 ---

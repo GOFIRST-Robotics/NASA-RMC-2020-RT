@@ -71,8 +71,7 @@ void drivetrain_loop(void) {
     vesc_set_rpm(brm, rpm_right);
     vesc_set_rpm(frm, rpm_right);
 
-    // now publish some optometry data
-    // idk what to send.
+    // now publish some odometry data
     // keep track of the position estimate, you start at 0,0, publish the
     // position estimate every loop.
 
@@ -98,6 +97,22 @@ void drivetrain_loop(void) {
     // no need to map phi from 0 to 2pi, cos function will do that for me
     x = x + d_center * cos(theta);
     y = y + d_center * sin(theta);
+    U32 id = (DRIVE_MSG_ODOM_POSE << 8u) | DRIVETRAIN_SYS_ID;
+    U8 buf[10];
+    S32 idx = 0;
+    S16 xposi = (S16)x;
+    S16 yposi = (S16)y;
+    S16 thetai = (S16)theta;
+    S16 xveli = (S16)speed_center;
+    S16 omegai = (S16)omega;
+    buffer_put_int16(buf, &idx, xposi);
+    buffer_put_int16(buf, &idx, yposi);
+    buffer_put_int16(buf, &idx, thetai);
+    buffer_put_int16(buf, &idx, xveli);
+    buffer_put_int16(buf, &idx, omegai);
+    do_send_can_message(id, buf, 6);
+    id = (DRIVE_MSG_ODOM_TWIST << 8u) | DRIVETRAIN_SYS_ID;
+    do_send_can_message(id, buf + 6, 4);
   }
 
   // give vescs rpm command
