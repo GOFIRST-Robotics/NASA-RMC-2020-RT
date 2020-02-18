@@ -91,7 +91,7 @@ void drivetrain_loop(void const* argument) {
     F32 speed_right = vesc_get_rpm(brm);
     F32 speed_left = vesc_get_rpm(blm);
     F32 speed_center = (speed_right + speed_left) / 2.0f;
-    F32 omega = (speed_right - speed_left) / WIDTH;
+    F32 omega = (speed_right - speed_left) / DT_WIDTH;
 
     F32 d_center =
         speed_center *
