@@ -92,12 +92,12 @@ void drivetrain_loop(void) {
     F32 d_center =
         speed_center *
         (DRIVE_LOOP_MS / 1000.0f);  // distance traveled by the robot, in mm
-    F32 phi = omega * (DRIVE_LOOP_MS / 1000.0f);  // how much the robot has turned this loop
-    theta += phi;             // theta can be negative
+    F32 phi = omega * (DRIVE_LOOP_MS /
+                       1000.0f);  // how much the robot has turned this loop
+    theta += phi;                 // theta can be negative
     // no need to map phi from 0 to 2pi, cos function will do that for me
     x = x + d_center * cos(theta);
     y = y + d_center * sin(theta);
-
   }
 
   // give vescs rpm command
