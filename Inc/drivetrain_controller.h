@@ -11,8 +11,10 @@
 // for an explanation on how the mathematics for the twist were calculated
 
 // ALL VALUES ARE IN MILLIMETERS
-#define RADIUS 1.00f
-#define WIDTH 2.00f
+#define DT_WHEEL_RADIUS 180.0f
+#define DT_WIDTH 1000.0f
+#define DT_GEAR_RATIO 80
+#define DT_MMS_TO_RPM (DT_GEAR_RATIO / (DT_WHEEL_RADIUS * 0.1047f))
 #define DRIVE_MSG_TWIST 35u
 #define DRIVE_MSG_ODOM_POSE 36u
 #define DRIVE_MSG_ODOM_TWIST 37u

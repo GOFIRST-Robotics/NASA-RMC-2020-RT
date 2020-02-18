@@ -5,11 +5,14 @@
 #include "drivetrain_controller.h"
 #include <FreeRTOS.h>
 #include <can_manager.h>
+#include <math.h>
+#include <print.h>
 #include <rt_conf.h>
+#include <stdio.h>
+#include <stm32f3xx_hal.h>
 #include <string.h>
 #include <task.h>
 #include "VESC.h"
-#include "math.h"
 #include "stdlib.h"
 
 // I am telling the motor controllers to implement a twist message until I get
@@ -32,13 +35,17 @@ void drivetrain_move(rmc_can_msg msg) {
   // This portion is already done by the CAN dispatcher. It is here purely for
   // Hunter's understanding.
 
+  S32 idx = 0;
   switch (msg.id >> 8) {
     case DRIVE_MSG_TWIST:
-      memcpy(&cmd_speed, &(msg.buf[4]), 4);
-      memcpy(&cmd_angV, (msg.buf), 4);
 
-      new_speed_right = (cmd_angV * WIDTH) / 2 + cmd_speed;
+      cmd_angV = buffer_pop_int32(msg.buf, &idx);
+      cmd_speed = buffer_pop_int32(msg.buf, &idx);
+
+      new_speed_right = (cmd_angV * DT_WIDTH) / 2 + cmd_speed;
       new_speed_left = cmd_speed * 2 - new_speed_right;
+      new_speed_right = new_speed_right * DT_MMS_TO_RPM;
+      new_speed_left = new_speed_left * DT_MMS_TO_RPM;
       break;
 
     default:
@@ -47,7 +54,7 @@ void drivetrain_move(rmc_can_msg msg) {
   }
 }
 
-void drivetrain_loop(void) {
+void drivetrain_loop(void const* argument) {
   // SETUP
   registerCANMsgHandler(DRIVETRAIN_SYS_ID, &drivetrain_move);
   VESC* blm = create_vesc(DRIVE_MOTOR_BL, DRIVE_MOTOR_POLE_PAIRS);
@@ -64,12 +71,10 @@ void drivetrain_loop(void) {
         DRIVE_LOOP_MS * portTICK_RATE_MS);  // Not sure what this does yet,
                                             // min 1hz refresh rate
 
-    F32 rpm_right = new_speed_right / (RADIUS * 2 * 3.14);
-    F32 rpm_left = new_speed_left / (RADIUS * 2 * 3.14);
-    vesc_set_rpm(blm, rpm_left);
-    vesc_set_rpm(flm, rpm_left);
-    vesc_set_rpm(brm, rpm_right);
-    vesc_set_rpm(frm, rpm_right);
+    vesc_set_rpm(blm, new_speed_left);
+    vesc_set_rpm(flm, new_speed_left);
+    vesc_set_rpm(brm, new_speed_right);
+    vesc_set_rpm(frm, new_speed_right);
 
     // now publish some odometry data
     // keep track of the position estimate, you start at 0,0, publish the
@@ -114,6 +119,4 @@ void drivetrain_loop(void) {
     id = (DRIVE_MSG_ODOM_TWIST << 8u) | DRIVETRAIN_SYS_ID;
     do_send_can_message(id, buf + 6, 4);
   }
-
-  // give vescs rpm command
 }
