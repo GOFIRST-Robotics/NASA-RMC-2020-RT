@@ -55,3 +55,11 @@ SNEEZE
 | Set dig speed |  61  | Listens  |   4    | Speed (int32) rpm |
 | Go home |  62  | Listens  |   0    | N/A |
 | Set transfer speed |  63  | Listens  |   4    | Speed (int32) rpm |
+
+BLESSYOU
+---
+| Command    | ID   | Broadcasts/Listens  | Length | Data |
+|------------|------|---------------------|--------|------|
+| ELevator State | 70 | Broadcasts (50 Hz) |   3    | Byte 0: <br>&nbsp;Bit 0: Top limit<br>&nbsp;Bit 1: Bottom limit<br>Byte 1: Position (int8) mm<br>Byte 2: Speed (int8) mm/s |
+| Set speed |  71  | Listens  |   1    | Speed (int8) mm/s |
+| Set position |  72  | Listens  |   1    | Position (int8) mm |
