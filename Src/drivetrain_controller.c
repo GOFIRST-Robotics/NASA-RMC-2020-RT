@@ -88,10 +88,10 @@ void drivetrain_loop(void const* argument) {
     // dright-dleft/(WIDTH) direction = angle change from origin+ previous
     // direction x_new = x_old +d_center*cos(theta) y_new = y_old
     // +d_center*sin(theta)
-    F32 speed_right = vesc_get_rpm(brm);
-    F32 speed_left = vesc_get_rpm(blm);
+    F32 speed_right = vesc_get_rpm(brm) / DT_MMS_TO_RPM;
+    F32 speed_left = vesc_get_rpm(blm) / DT_MMS_TO_RPM;
     F32 speed_center = (speed_right + speed_left) / 2.0f;
-    F32 omega = (speed_right - speed_left) / DT_WIDTH;
+    F32 omega = (speed_right - speed_left) / (DT_WIDTH * 1000.0f);
 
     F32 d_center =
         speed_center *
