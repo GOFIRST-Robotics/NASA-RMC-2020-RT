@@ -45,6 +45,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 CAN_HandleTypeDef hcan;
 
@@ -65,9 +66,9 @@ osStaticThreadDef_t gesundheitTaskControlBlock;
 osThreadId sneezeControlHandle;
 uint32_t sneezeControlBuffer[128];
 osStaticThreadDef_t sneezeControlControlBlock;
-osThreadId drivetrainTaskHandle;
-uint32_t drivetrainTaskBuffer[128];
-osStaticThreadDef_t drivetrainTaskControlBlock;
+osThreadId blessyouControlHandle;
+uint32_t blessyouControlBuffer[128];
+osStaticThreadDef_t blessyouControlControlBlock;
 osMutexId canTxMutexHandle;
 osStaticMutexDef_t canTxMutexControlBlock;
 /* USER CODE BEGIN PV */
@@ -80,12 +81,13 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_CAN_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_DMA_Init(void);
 void StartDefaultTask(void const *argument);
 extern void achooControllerFunc(void const *argument);
 extern void canRxDispatchTask(void const *argument);
 extern void gesundheitControllerFunc(void const *argument);
 extern void sneezeControllerFunc(void const *argument);
-extern void drivetrain_loop(void const *argument);
+extern void blessyou_controller(void const *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -126,6 +128,7 @@ int main(void) {
   MX_USART2_UART_Init();
   MX_CAN_Init();
   MX_ADC1_Init();
+  MX_DMA_Init();
   /* USER CODE BEGIN 2 */
   vesc_system_init();
   /* USER CODE END 2 */
@@ -158,9 +161,9 @@ int main(void) {
   defaultTaskHandle = osThreadCreate(osThread(defaultTask), NULL);
 
   /* definition and creation of achooController */
-  /*osThreadStaticDef(achooController, achooControllerFunc, osPriorityNormal, 0,
-  128, achooControllerBuffer, &achooControllerControlBlock);
-  achooControllerHandle = osThreadCreate(osThread(achooController), NULL);*/
+  osThreadStaticDef(achooController, achooControllerFunc, osPriorityNormal, 0,
+                    128, achooControllerBuffer, &achooControllerControlBlock);
+  achooControllerHandle = osThreadCreate(osThread(achooController), NULL);
 
   /* definition and creation of canRxDispatch */
   osThreadStaticDef(canRxDispatch, canRxDispatchTask, osPriorityAboveNormal, 0,
@@ -168,19 +171,19 @@ int main(void) {
   canRxDispatchHandle = osThreadCreate(osThread(canRxDispatch), NULL);
 
   /* definition and creation of gesundheitTask */
-  /*osThreadStaticDef(gesundheitTask, gesundheitControllerFunc,
-  osPriorityNormal, 0, 128, gesundheitTaskBuffer, &gesundheitTaskControlBlock);
-  gesundheitTaskHandle = osThreadCreate(osThread(gesundheitTask), NULL);*/
+  osThreadStaticDef(gesundheitTask, gesundheitControllerFunc, osPriorityNormal,
+                    0, 128, gesundheitTaskBuffer, &gesundheitTaskControlBlock);
+  gesundheitTaskHandle = osThreadCreate(osThread(gesundheitTask), NULL);
 
   /* definition and creation of sneezeControl */
-  /*osThreadStaticDef(sneezeControl, sneezeControllerFunc, osPriorityNormal, 0,
-  128, sneezeControlBuffer, &sneezeControlControlBlock); sneezeControlHandle =
-  osThreadCreate(osThread(sneezeControl), NULL);*/
+  osThreadStaticDef(sneezeControl, sneezeControllerFunc, osPriorityNormal, 0,
+                    128, sneezeControlBuffer, &sneezeControlControlBlock);
+  sneezeControlHandle = osThreadCreate(osThread(sneezeControl), NULL);
 
-  /* definition and creation of drivetrainTask */
-  osThreadStaticDef(drivetrainTask, drivetrain_loop, osPriorityNormal, 0, 128,
-                    drivetrainTaskBuffer, &drivetrainTaskControlBlock);
-  drivetrainTaskHandle = osThreadCreate(osThread(drivetrainTask), NULL);
+  /* definition and creation of blessyouControl */
+  osThreadStaticDef(blessyouControl, blessyou_controller, osPriorityNormal, 0,
+                    128, blessyouControlBuffer, &blessyouControlControlBlock);
+  blessyouControlHandle = osThreadCreate(osThread(blessyouControl), NULL);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -264,15 +267,15 @@ static void MX_ADC1_Init(void) {
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.NbrOfConversion = 2;
+  hadc1.Init.DMAContinuousRequests = ENABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
   hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
   if (HAL_ADC_Init(&hadc1) != HAL_OK) {
@@ -289,9 +292,16 @@ static void MX_ADC1_Init(void) {
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.SamplingTime = ADC_SAMPLETIME_1CYCLE_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_601CYCLES_5;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
+    Error_Handler();
+  }
+  /** Configure Regular Channel
+   */
+  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK) {
     Error_Handler();
   }
@@ -386,6 +396,19 @@ static void MX_USART2_UART_Init(void) {
   /* USER CODE BEGIN USART2_Init 2 */
 
   /* USER CODE END USART2_Init 2 */
+}
+
+/**
+ * Enable DMA controller clock
+ */
+static void MX_DMA_Init(void) {
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 }
 
 /**

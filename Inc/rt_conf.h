@@ -16,6 +16,7 @@
 #define ACHOO_SYS_ID 101u
 #define GESUNDHEIT_SYS_ID 102u
 #define SNEEZE_SYS_ID 103u
+#define BLESSYOU_SYS_ID 104u
 
 // Controller IDs
 #define ACHOO_MOTOR_L 10u
@@ -27,5 +28,7 @@
 #define GESUNDHEIT_MOTOR_ID 12u
 #define SNEEZE_MOTOR_DIG 13u
 #define SNEEZE_MOTOR_TRANS 14u
+#define BLESSYOU_MOTOR_L 15u
+#define BLESSYOU_MOTOR_R 16u
 
 #endif  // NASA_RMC_RT_RT_CONF_H
