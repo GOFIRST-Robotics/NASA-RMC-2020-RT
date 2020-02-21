@@ -56,9 +56,6 @@ void blessyou_controller(void const* argument) {
     F32 speedR = vesc_get_rpm(rightMotor) * BLESSYOU_RPM_TO_MMS;
     currentSpeed = (S8)((speedL + speedR) / 2.0f);
     // Update position
-    HAL_ADC_Start(&hadc1);
-    HAL_ADC_PollForConversion(&hadc1,
-                              HAL_MAX_DELAY);  // Wait for conv completion
     U32 potRval = adcVal[0];
     U32 potLval = adcVal[1];
     F32 lPos = (F32)potLval * BLESSYOU_ADC_TO_MM;
