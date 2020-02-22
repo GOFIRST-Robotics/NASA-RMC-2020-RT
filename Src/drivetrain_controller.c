@@ -22,6 +22,8 @@ F32 new_speed_right = 0;
 F32 theta = 0;  // keeps tracks of robot angle, init facing 0 degrees on the top
                 // down xy coordinate plane
 F32 x = 0, y = 0;  // absolute position of the robot, starts at (0,0)
+static char strbuf[64];
+static U32 loop_ct = 10;
 
 void drivetrain_move(rmc_can_msg msg) {
   // Because of the mask we only get messages that have our ID
@@ -46,6 +48,7 @@ void drivetrain_move(rmc_can_msg msg) {
       new_speed_left = cmd_speed * 2 - new_speed_right;
       new_speed_right = new_speed_right * DT_MMS_TO_RPM;
       new_speed_left = new_speed_left * DT_MMS_TO_RPM;
+      loop_ct = 0;
       break;
 
     default:
@@ -70,7 +73,11 @@ void drivetrain_loop(void const* argument) {
         &lastWakeTime,
         DRIVE_LOOP_MS * portTICK_RATE_MS);  // Not sure what this does yet,
                                             // min 1hz refresh rate
-
+    if (loop_ct > DRIVE_OVERLOOP_MAX) {
+      new_speed_right = 0.0f;
+      new_speed_left = 0.0f;
+    }
+    loop_ct++;
     vesc_set_rpm(blm, new_speed_left);
     vesc_set_rpm(flm, new_speed_left);
     vesc_set_rpm(brm, new_speed_right);
@@ -91,7 +98,7 @@ void drivetrain_loop(void const* argument) {
     F32 speed_right = vesc_get_rpm(brm) / DT_MMS_TO_RPM;
     F32 speed_left = vesc_get_rpm(blm) / DT_MMS_TO_RPM;
     F32 speed_center = (speed_right + speed_left) / 2.0f;
-    F32 omega = (speed_right - speed_left) / (DT_WIDTH * 1000.0f);
+    F32 omega = (speed_right - speed_left) / DT_WIDTH;
 
     F32 d_center =
         speed_center *
@@ -107,9 +114,9 @@ void drivetrain_loop(void const* argument) {
     S32 idx = 0;
     S16 xposi = (S16)x;
     S16 yposi = (S16)y;
-    S16 thetai = (S16)theta;
+    S16 thetai = (S16)(theta*1000.0f);
     S16 xveli = (S16)speed_center;
-    S16 omegai = (S16)omega;
+    S16 omegai = (S16)(omega*1000.0f);
     buffer_put_int16(buf, &idx, xposi);
     buffer_put_int16(buf, &idx, yposi);
     buffer_put_int16(buf, &idx, thetai);

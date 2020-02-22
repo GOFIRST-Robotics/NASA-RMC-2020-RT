@@ -21,5 +21,6 @@
 
 #define DRIVE_LOOP_MS 100u  // milliseconds, unsigned
 #define DRIVE_MOTOR_POLE_PAIRS 7u
+#define DRIVE_OVERLOOP_MAX 3u
 
 #endif  // NASA_RMC_RT_DRIVETRAIN_CONTROLLER_H
