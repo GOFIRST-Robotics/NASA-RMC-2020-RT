@@ -15,9 +15,12 @@
 #define DT_WIDTH 1000.0f
 #define DT_GEAR_RATIO 80
 #define DT_MMS_TO_RPM (DT_GEAR_RATIO / (DT_WHEEL_RADIUS * 0.1047f))
-typedef enum { DRIVE_MSG_TWIST = 35 } DRIVE_MSG_T;
+#define DRIVE_MSG_TWIST 35u
+#define DRIVE_MSG_ODOM_POSE 36u
+#define DRIVE_MSG_ODOM_TWIST 37u
 
 #define DRIVE_LOOP_MS 100u  // milliseconds, unsigned
 #define DRIVE_MOTOR_POLE_PAIRS 7u
+#define DRIVE_OVERLOOP_MAX 3u
 
 #endif  // NASA_RMC_RT_DRIVETRAIN_CONTROLLER_H
